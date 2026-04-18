@@ -132,6 +132,27 @@ class AsyncSharedMemory:
         return await self._request("DELETE", f"/agent/memory/{memory_id}",
                                    json={"volume_id": volume_id or self.volume_id})
 
+    async def delete_many(self, memory_ids: List[str], *,
+                          volume_id: Optional[str] = None) -> Dict[str, Any]:
+        """Batch delete up to 100 memories in a single request."""
+        return await self._request("POST", "/agent/memory/delete/batch", json={
+            "volume_id": volume_id or self.volume_id,
+            "memory_ids": memory_ids,
+        })
+
+    async def update_many(self, updates: List[Dict[str, Any]], *,
+                          volume_id: Optional[str] = None) -> Dict[str, Any]:
+        """Batch update up to 100 memories in a single request.
+
+        Each item should have 'memory_id', 'content', and optionally 'metadata'.
+        """
+        return await self._request("POST", "/agent/memory/update/batch", json={
+            "volume_id": volume_id or self.volume_id,
+            "updates": [{"memory_id": u["memory_id"], "content": u["content"],
+                         **({"metadata": u["metadata"]} if "metadata" in u else {})}
+                        for u in updates],
+        })
+
     async def add_many(self, memories: List[Dict[str, Any]]) -> Dict[str, Any]:
         payload = [{
             "content": m["content"], "volume_id": m.get("volume_id", self.volume_id),
@@ -152,6 +173,26 @@ class AsyncSharedMemory:
 
     async def history(self, memory_id: str) -> Dict[str, Any]:
         return await self._request("GET", f"/memory/feedback/history/{memory_id}")
+
+    # ── Webhooks ──
+
+    async def webhook_subscribe(
+        self, url: str, *, volume_id: Optional[str] = None,
+        events: Optional[List[str]] = None, secret: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Register a persistent HTTP webhook for volume events."""
+        return await self._request("POST", "/agent/memory/subscribe", json={
+            "volume_id": volume_id or self.volume_id, "url": url,
+            "events": events or ["memory.approved", "memory.flagged"], "secret": secret,
+        })
+
+    async def webhook_unsubscribe(
+        self, url: str, *, volume_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Remove a persistent HTTP webhook subscription."""
+        return await self._request("DELETE", "/agent/memory/unsubscribe", json={
+            "volume_id": volume_id or self.volume_id, "url": url,
+        })
 
     # ── Knowledge Graph ──
 
@@ -217,3 +258,69 @@ class AsyncSharedMemory:
         return await self._request("POST", "/memory/extract", json={
             "text": text, "volume_id": volume_id or self.volume_id, "schema_id": schema_id,
         })
+
+    # ── Agent Profile Management ──
+
+    async def create_agent(
+        self, org_id: str, project_id: str, name: str, *,
+        description: Optional[str] = None, system_prompt: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create an agent with an auto-generated API key."""
+        return await self._request("POST", "/agents", json={
+            "org_id": org_id, "project_id": project_id, "name": name,
+            "description": description, "system_prompt": system_prompt,
+        })
+
+    async def list_agents(self, org_id: str, *, project_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List agents in an organization."""
+        params: Dict[str, str] = {"org_id": org_id}
+        if project_id:
+            params["project_id"] = project_id
+        return await self._request("GET", "/agents", params=params)
+
+    async def get_agent(self, agent_id: str) -> Dict[str, Any]:
+        """Get a single agent by ID."""
+        return await self._request("GET", f"/agents/{agent_id}")
+
+    async def update_agent(
+        self, agent_id: str, *, name: Optional[str] = None,
+        description: Optional[str] = None, system_prompt: Optional[str] = None,
+        is_active: Optional[bool] = None,
+    ) -> Dict[str, Any]:
+        """Update an agent's name, description, or system prompt."""
+        payload: Dict[str, Any] = {}
+        if name is not None:
+            payload["name"] = name
+        if description is not None:
+            payload["description"] = description
+        if system_prompt is not None:
+            payload["system_prompt"] = system_prompt
+        if is_active is not None:
+            payload["is_active"] = is_active
+        return await self._request("PATCH", f"/agents/{agent_id}", json=payload)
+
+    async def delete_agent(self, agent_id: str) -> Dict[str, Any]:
+        """Deactivate an agent and revoke its API key."""
+        return await self._request("DELETE", f"/agents/{agent_id}")
+
+    async def rotate_agent_key(self, agent_id: str) -> Dict[str, Any]:
+        """Rotate an agent's API key."""
+        return await self._request("POST", f"/agents/{agent_id}/rotate-key")
+
+    # ── Organization Management ──
+
+    async def list_orgs(self) -> List[Dict[str, Any]]:
+        """List organizations the current user belongs to."""
+        return await self._request("GET", "/orgs")
+
+    async def get_org(self, org_id: str) -> Dict[str, Any]:
+        """Get a single organization by ID."""
+        return await self._request("GET", f"/orgs/{org_id}")
+
+    async def list_org_members(self, org_id: str) -> List[Dict[str, Any]]:
+        """List members of an organization."""
+        return await self._request("GET", f"/orgs/{org_id}/members")
+
+    async def apply_promo(self, org_id: str, code: str) -> Dict[str, Any]:
+        """Apply a promo code to an organization."""
+        return await self._request("POST", f"/orgs/{org_id}/promo", json={"code": code})
