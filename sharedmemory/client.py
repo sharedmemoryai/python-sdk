@@ -304,6 +304,12 @@ class SharedMemory:
             "volume_id": volume_id or self.volume_id,
         })
 
+    # ── Volumes ──
+
+    def list_volumes(self) -> List[Dict[str, Any]]:
+        """List volumes this API key has access to."""
+        return self._request("GET", "/agent/volumes")
+
     # ── Context Assembly ──
 
     def assemble_context(

@@ -201,10 +201,24 @@ class AsyncSharedMemory:
             "entity_name": name, "volume_id": volume_id or self.volume_id,
         })
 
+    async def search_entities(
+        self, query: str, *, volume_id: Optional[str] = None, limit: int = 10,
+    ) -> List[Dict[str, Any]]:
+        """Search entities by name pattern."""
+        return await self._request("POST", "/agent/entities/search", json={
+            "query": query, "volume_id": volume_id or self.volume_id, "limit": limit,
+        })
+
     async def get_graph(self, *, volume_id: Optional[str] = None) -> Dict[str, Any]:
         return await self._request("POST", "/agent/graph", json={
             "volume_id": volume_id or self.volume_id,
         })
+
+    # ── Volumes ──
+
+    async def list_volumes(self) -> List[Dict[str, Any]]:
+        """List volumes this API key has access to."""
+        return await self._request("GET", "/agent/volumes")
 
     # ── Context Assembly ──
 
@@ -238,6 +252,15 @@ class AsyncSharedMemory:
 
     async def get_session(self, session_id: str) -> Dict[str, Any]:
         return await self._request("GET", f"/memory/sessions/{session_id}")
+
+    async def list_sessions(
+        self, *, volume_id: Optional[str] = None, status: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """List sessions for a volume."""
+        params: Dict[str, str] = {"volume_id": volume_id or self.volume_id}
+        if status:
+            params["status"] = status
+        return await self._request("GET", "/memory/sessions", params=params)
 
     # ── Export / Import ──
 
