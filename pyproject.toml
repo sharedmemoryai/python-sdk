@@ -25,7 +25,7 @@ dependencies = [
 [project.urls]
 Homepage = "https://sharedmemory.ai"
 Documentation = "https://docs.sharedmemory.ai/sdks/overview"
-Repository = "https://github.com/Akash-Agarwal-X/python-sdk"
+Repository = "https://github.com/sharedmemoryai/python-sdk"
 
 [tool.hatch.build.targets.wheel]
 packages = ["sharedmemory"]
