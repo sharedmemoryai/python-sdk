@@ -336,6 +336,34 @@ class SharedMemory:
         if template_id: body["template_id"] = template_id
         return self._request("POST", "/agent/memory/context/assemble", json=body)
 
+    # ── Instructions ──
+
+    def set_instruction(
+        self,
+        content: str,
+        *,
+        volume_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """Create an instruction that all agents on this volume will receive in their context."""
+        body: Dict[str, Any] = {
+            "content": content,
+            "volume_id": volume_id or self.volume_id,
+            "memory_type": "instruction",
+            **self._entity_scope(),
+        }
+        if metadata: body["metadata"] = metadata
+        return self._request("POST", "/agent/memory/write", json=body)
+
+    def list_instructions(self, *, volume_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List all instructions for a volume."""
+        vol = volume_id or self.volume_id
+        return self._request("GET", "/agent/memory/list", params={"volume_id": vol, "memory_type": "instruction"})
+
+    def delete_instruction(self, memory_id: str, *, volume_id: Optional[str] = None) -> Dict[str, Any]:
+        """Delete an instruction by memory ID."""
+        return self.delete(memory_id, volume_id=volume_id)
+
     # ── Sessions ──
 
     def start_session(
