@@ -5,7 +5,7 @@ The persistent memory layer for AI agents. Add, search, and manage long-term mem
 ## Installation
 
 ```bash
-pip install sharedmemory
+pip install sharedmemory-ai
 ```
 
 ## Quick Start
@@ -140,22 +140,40 @@ async with AsyncSharedMemory(api_key="sm_live_...") as memory:
 
 | Method | Description |
 |--------|-------------|
-| `add(content)` | Add a memory |
-| `search(query)` | Semantic search |
+| `add(content)` | Add a memory (alias: `remember`) |
+| `search(query)` | Semantic search (alias: `recall`) |
 | `get(memory_id)` | Get single memory |
 | `update(memory_id, content)` | Update memory |
 | `delete(memory_id)` | Soft-delete |
 | `add_many(memories)` | Batch write (up to 100) |
+| `delete_many(memory_ids)` | Batch delete |
+| `update_many(updates)` | Batch update |
 | `feedback(memory_id, feedback)` | Quality feedback |
 | `history(memory_id)` | Audit trail |
 | `get_entity(name)` | Knowledge graph entity |
+| `search_entities(query)` | Search entities by name |
 | `get_graph()` | Full knowledge graph |
+| `list_volumes()` | List accessible volumes |
 | `assemble_context()` | LLM context block |
 | `start_session(id)` | Start session |
 | `end_session(id)` | End + summarize session |
+| `get_session(id)` | Get session details |
+| `list_sessions()` | List sessions |
+| `webhook_subscribe(url, *, events)` | Register webhook |
+| `webhook_unsubscribe(url)` | Remove webhook |
 | `export_memories()` | Export all memories |
-| `import_memories(data)` | Bulk import |
+| `import_memories(memories)` | Bulk import |
 | `extract(text, schema_id)` | Structured extraction |
+| `create_agent(org_id, project_id, name)` | Create agent |
+| `list_agents(org_id)` | List agents |
+| `get_agent(agent_id)` | Get agent details |
+| `update_agent(agent_id)` | Update agent |
+| `delete_agent(agent_id)` | Delete agent |
+| `rotate_agent_key(agent_id)` | Rotate agent API key |
+| `list_orgs()` | List organizations |
+| `get_org(org_id)` | Get org details |
+| `list_org_members(org_id)` | List org members |
+| `apply_promo(org_id, code)` | Apply promo code |
 
 ## License
 
