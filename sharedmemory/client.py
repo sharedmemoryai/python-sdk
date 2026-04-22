@@ -235,7 +235,7 @@ class SharedMemory:
         reason: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Submit feedback on a memory ('POSITIVE', 'NEGATIVE', or 'VERY_NEGATIVE')."""
-        return self._request("POST", "/memory/feedback", json={
+        return self._request("POST", "/agent/memory/feedback", json={
             "memory_id": memory_id,
             "volume_id": volume_id or self.volume_id,
             "feedback": feedback,
@@ -245,7 +245,7 @@ class SharedMemory:
 
     def history(self, memory_id: str) -> Dict[str, Any]:
         """Get audit trail for a memory."""
-        return self._request("GET", f"/memory/feedback/history/{memory_id}")
+        return self._request("GET", f"/agent/memory/feedback/history/{memory_id}")
 
     # ── Webhooks ──
 
@@ -342,7 +342,7 @@ class SharedMemory:
         app_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Start a new session for scoped memory tracking."""
-        return self._request("POST", "/memory/sessions/start", json={
+        return self._request("POST", "/agent/memory/sessions/start", json={
             "session_id": session_id,
             "volume_id": volume_id or self.volume_id,
             "user_id": user_id or self.user_id,
@@ -358,7 +358,7 @@ class SharedMemory:
         auto_summarize: bool = True,
     ) -> Dict[str, Any]:
         """End a session. If auto_summarize=True, compresses session memories into long-term storage."""
-        return self._request("POST", "/memory/sessions/end", json={
+        return self._request("POST", "/agent/memory/sessions/end", json={
             "session_id": session_id,
             "volume_id": volume_id or self.volume_id,
             "auto_summarize": auto_summarize,
@@ -366,7 +366,7 @@ class SharedMemory:
 
     def get_session(self, session_id: str) -> Dict[str, Any]:
         """Get session details including memory count."""
-        return self._request("GET", f"/memory/sessions/{session_id}")
+        return self._request("GET", f"/agent/memory/sessions/{session_id}")
 
     def list_sessions(
         self,
@@ -378,7 +378,7 @@ class SharedMemory:
         params: Dict[str, str] = {"volume_id": volume_id or self.volume_id}
         if status:
             params["status"] = status
-        return self._request("GET", "/memory/sessions", params=params)
+        return self._request("GET", "/agent/memory/sessions", params=params)
 
     # ── Export / Import ──
 
@@ -409,7 +409,7 @@ class SharedMemory:
         volume_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Extract structured data from text using a predefined JSON schema."""
-        return self._request("POST", "/memory/extract", json={
+        return self._request("POST", "/agent/memory/extract", json={
             "text": text,
             "volume_id": volume_id or self.volume_id,
             "schema_id": schema_id,

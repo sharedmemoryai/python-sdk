@@ -168,13 +168,13 @@ class AsyncSharedMemory:
 
     async def feedback(self, memory_id: str, feedback: str, *,
                        volume_id: Optional[str] = None, reason: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/feedback", json={
+        return await self._request("POST", "/agent/memory/feedback", json={
             "memory_id": memory_id, "volume_id": volume_id or self.volume_id,
             "feedback": feedback, "feedback_reason": reason, **self._entity_scope(),
         })
 
     async def history(self, memory_id: str) -> Dict[str, Any]:
-        return await self._request("GET", f"/memory/feedback/history/{memory_id}")
+        return await self._request("GET", f"/agent/memory/feedback/history/{memory_id}")
 
     # ── Webhooks ──
 
@@ -239,7 +239,7 @@ class AsyncSharedMemory:
     async def start_session(self, session_id: str, *, volume_id: Optional[str] = None,
                             user_id: Optional[str] = None, agent_id: Optional[str] = None,
                             app_id: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/sessions/start", json={
+        return await self._request("POST", "/agent/memory/sessions/start", json={
             "session_id": session_id, "volume_id": volume_id or self.volume_id,
             "user_id": user_id or self.user_id, "agent_id": agent_id or self.agent_id,
             "app_id": app_id or self.app_id,
@@ -247,13 +247,13 @@ class AsyncSharedMemory:
 
     async def end_session(self, session_id: str, *, volume_id: Optional[str] = None,
                           auto_summarize: bool = True) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/sessions/end", json={
+        return await self._request("POST", "/agent/memory/sessions/end", json={
             "session_id": session_id, "volume_id": volume_id or self.volume_id,
             "auto_summarize": auto_summarize,
         })
 
     async def get_session(self, session_id: str) -> Dict[str, Any]:
-        return await self._request("GET", f"/memory/sessions/{session_id}")
+        return await self._request("GET", f"/agent/memory/sessions/{session_id}")
 
     async def list_sessions(
         self, *, volume_id: Optional[str] = None, status: Optional[str] = None,
@@ -262,7 +262,7 @@ class AsyncSharedMemory:
         params: Dict[str, str] = {"volume_id": volume_id or self.volume_id}
         if status:
             params["status"] = status
-        return await self._request("GET", "/memory/sessions", params=params)
+        return await self._request("GET", "/agent/memory/sessions", params=params)
 
     # ── Export / Import ──
 
@@ -280,7 +280,7 @@ class AsyncSharedMemory:
 
     async def extract(self, text: str, schema_id: str, *,
                       volume_id: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/extract", json={
+        return await self._request("POST", "/agent/memory/extract", json={
             "text": text, "volume_id": volume_id or self.volume_id, "schema_id": schema_id,
         })
 
