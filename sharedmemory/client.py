@@ -23,7 +23,7 @@ class SharedMemory:
         self,
         api_key: str,
         base_url: str = "https://api.sharedmemory.ai",
-        volume_id: str = "default",
+        volume_id: str = "",
         agent_name: str = "python-sdk",
         timeout: float = 30.0,
         user_id: Optional[str] = None,
@@ -33,6 +33,8 @@ class SharedMemory:
     ):
         if not api_key:
             raise ValueError("api_key is required")
+        if not volume_id:
+            raise ValueError("volume_id is required. Get yours from the SharedMemory dashboard.")
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.volume_id = volume_id
@@ -383,7 +385,7 @@ class SharedMemory:
     def export_memories(self, *, volume_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Export all memories for a volume."""
         vol = volume_id or self.volume_id
-        return self._request("GET", "/agent/memory/export", params={"volume_id": vol})
+        return self._request("GET", "/memory/export", params={"volume_id": vol})
 
     def import_memories(
         self,
@@ -392,7 +394,7 @@ class SharedMemory:
         volume_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Bulk import memories into a volume."""
-        return self._request("POST", "/agent/memory/import", json={
+        return self._request("POST", "/memory/export", json={
             "volume_id": volume_id or self.volume_id,
             "memories": memories,
         })

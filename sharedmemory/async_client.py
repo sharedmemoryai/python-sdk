@@ -25,7 +25,7 @@ class AsyncSharedMemory:
         self,
         api_key: str,
         base_url: str = "https://api.sharedmemory.ai",
-        volume_id: str = "default",
+        volume_id: str = "",
         agent_name: str = "python-sdk",
         timeout: float = 30.0,
         user_id: Optional[str] = None,
@@ -35,6 +35,8 @@ class AsyncSharedMemory:
     ):
         if not api_key:
             raise ValueError("api_key is required")
+        if not volume_id:
+            raise ValueError("volume_id is required. Get yours from the SharedMemory dashboard.")
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
         self.volume_id = volume_id
@@ -265,12 +267,12 @@ class AsyncSharedMemory:
     # ── Export / Import ──
 
     async def export_memories(self, *, volume_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        return await self._request("GET", "/agent/memory/export",
+        return await self._request("GET", "/memory/export",
                                    params={"volume_id": volume_id or self.volume_id})
 
     async def import_memories(self, memories: List[Dict[str, Any]], *,
                               volume_id: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/agent/memory/import", json={
+        return await self._request("POST", "/memory/export", json={
             "volume_id": volume_id or self.volume_id, "memories": memories,
         })
 
