@@ -364,6 +364,27 @@ class SharedMemory:
         """Delete an instruction by memory ID."""
         return self.delete(memory_id, volume_id=volume_id)
 
+    # ── Profile ──
+
+    def get_profile(
+        self,
+        *,
+        volume_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """Get a comprehensive profile for a volume or user.
+
+        Returns categorized facts (identity, preferences, expertise, projects),
+        relationships, recent activity, instructions, topics, stats,
+        and a pre-formatted context_block for LLM injection.
+        Cached for 5 minutes. Pass refresh=True to bypass.
+        """
+        body: Dict[str, Any] = {"volume_id": volume_id or self.volume_id}
+        if user_id: body["user_id"] = user_id
+        if refresh: body["refresh"] = True
+        return self._request("POST", "/agent/memory/profile", json=body)
+
     # ── Sessions ──
 
     def start_session(

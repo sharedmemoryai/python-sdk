@@ -295,6 +295,27 @@ class AsyncSharedMemory:
         """Delete an instruction by memory ID."""
         return await self.delete(memory_id, volume_id=volume_id)
 
+    # ── Profile ──
+
+    async def get_profile(
+        self,
+        *,
+        volume_id: Optional[str] = None,
+        user_id: Optional[str] = None,
+        refresh: bool = False,
+    ) -> Dict[str, Any]:
+        """Get a comprehensive profile for a volume or user.
+
+        Returns categorized facts (identity, preferences, expertise, projects),
+        relationships, recent activity, instructions, topics, stats,
+        and a pre-formatted context_block for LLM injection.
+        Cached for 5 minutes. Pass refresh=True to bypass.
+        """
+        body: Dict[str, Any] = {"volume_id": volume_id or self.volume_id}
+        if user_id: body["user_id"] = user_id
+        if refresh: body["refresh"] = True
+        return await self._request("POST", "/agent/memory/profile", json=body)
+
     # ── Sessions ──
 
     async def start_session(self, session_id: str, *, volume_id: Optional[str] = None,
