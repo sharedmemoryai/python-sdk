@@ -324,7 +324,7 @@ class SharedMemory:
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Assemble a context block for LLM prompting (Zep-style)."""
-        return self._request("POST", "/memory/context/assemble", json={
+        return self._request("POST", "/agent/memory/context/assemble", json={
             "volume_id": volume_id or self.volume_id,
             "template_id": template_id,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
@@ -385,7 +385,7 @@ class SharedMemory:
     def export_memories(self, *, volume_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """Export all memories for a volume."""
         vol = volume_id or self.volume_id
-        return self._request("GET", "/memory/export", params={"volume_id": vol})
+        return self._request("GET", "/agent/memory/export", params={"volume_id": vol})
 
     def import_memories(
         self,
@@ -394,7 +394,7 @@ class SharedMemory:
         volume_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Bulk import memories into a volume."""
-        return self._request("POST", "/memory/export", json={
+        return self._request("POST", "/memory/export/import", json={
             "volume_id": volume_id or self.volume_id,
             "memories": memories,
         })

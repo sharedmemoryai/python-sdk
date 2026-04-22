@@ -229,7 +229,7 @@ class AsyncSharedMemory:
                                user_id: Optional[str] = None,
                                agent_id: Optional[str] = None,
                                session_id: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/context/assemble", json={
+        return await self._request("POST", "/agent/memory/context/assemble", json={
             "volume_id": volume_id or self.volume_id, "template_id": template_id,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
         })
@@ -267,12 +267,12 @@ class AsyncSharedMemory:
     # ── Export / Import ──
 
     async def export_memories(self, *, volume_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        return await self._request("GET", "/memory/export",
+        return await self._request("GET", "/agent/memory/export",
                                    params={"volume_id": volume_id or self.volume_id})
 
     async def import_memories(self, memories: List[Dict[str, Any]], *,
                               volume_id: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/export", json={
+        return await self._request("POST", "/memory/export/import", json={
             "volume_id": volume_id or self.volume_id, "memories": memories,
         })
 
