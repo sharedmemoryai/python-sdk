@@ -272,7 +272,7 @@ class AsyncSharedMemory:
 
     async def import_memories(self, memories: List[Dict[str, Any]], *,
                               volume_id: Optional[str] = None) -> Dict[str, Any]:
-        return await self._request("POST", "/memory/export/import", json={
+        return await self._request("POST", "/agent/memory/export/import", json={
             "volume_id": volume_id or self.volume_id, "memories": memories,
         })
 

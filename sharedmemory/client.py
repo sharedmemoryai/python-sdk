@@ -394,7 +394,7 @@ class SharedMemory:
         volume_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Bulk import memories into a volume."""
-        return self._request("POST", "/memory/export/import", json={
+        return self._request("POST", "/agent/memory/export/import", json={
             "volume_id": volume_id or self.volume_id,
             "memories": memories,
         })
