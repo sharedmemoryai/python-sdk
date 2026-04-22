@@ -70,13 +70,17 @@ class SharedMemory:
         agent_id: Optional[str] = None,
         app_id: Optional[str] = None,
         session_id: Optional[str] = None,
-    ) -> Dict[str, Optional[str]]:
-        return {
-            "user_id": user_id or self.user_id,
-            "agent_id": agent_id or self.agent_id,
-            "app_id": app_id or self.app_id,
-            "session_id": session_id or self.session_id,
-        }
+    ) -> Dict[str, str]:
+        scope: Dict[str, str] = {}
+        v = user_id or self.user_id
+        if v: scope["user_id"] = v
+        v = agent_id or self.agent_id
+        if v: scope["agent_id"] = v
+        v = app_id or self.app_id
+        if v: scope["app_id"] = v
+        v = session_id or self.session_id
+        if v: scope["session_id"] = v
+        return scope
 
     def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         resp = self._client.request(method, path, **kwargs)
@@ -93,7 +97,6 @@ class SharedMemory:
         *,
         volume_id: Optional[str] = None,
         memory_type: str = "factual",
-        source: str = "sdk",
         tags: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None,
@@ -102,16 +105,14 @@ class SharedMemory:
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Add a memory. Returns processing result with status, confidence, memory_id."""
-        return self._request("POST", "/agent/memory/write", json={
+        body: Dict[str, Any] = {
             "content": content,
             "volume_id": volume_id or self.volume_id,
-            "agent": self.agent_name,
             "memory_type": memory_type,
-            "source": source,
-            "tags": tags,
-            "metadata": metadata,
             **self._entity_scope(user_id, agent_id, app_id, session_id),
-        })
+        }
+        if metadata: body["metadata"] = metadata
+        return self._request("POST", "/agent/memory/write", json=body)
 
     remember = add  # alias
 
@@ -131,17 +132,18 @@ class SharedMemory:
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Search memories by semantic similarity with optional reranking and context assembly."""
-        return self._request("POST", "/agent/memory/query", json={
+        body: Dict[str, Any] = {
             "query": query,
             "volume_id": volume_id or self.volume_id,
             "limit": limit,
-            "filters": filters,
-            "rerank": rerank,
-            "rerank_method": rerank_method,
-            "include_context": include_context,
-            "template_id": template_id,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
-        })
+        }
+        if filters: body["filters"] = filters
+        if rerank: body["rerank"] = rerank
+        if rerank_method: body["rerank_method"] = rerank_method
+        if include_context: body["include_context"] = include_context
+        if template_id: body["template_id"] = template_id
+        return self._request("POST", "/agent/memory/query", json=body)
 
     recall = search  # alias
 
@@ -211,17 +213,17 @@ class SharedMemory:
         """
         payload = []
         for m in memories:
-            payload.append({
+            item: Dict[str, Any] = {
                 "content": m["content"],
                 "volume_id": m.get("volume_id", self.volume_id),
                 "memory_type": m.get("memory_type", "factual"),
-                "tags": m.get("tags"),
-                "metadata": m.get("metadata"),
                 **self._entity_scope(
                     m.get("user_id"), m.get("agent_id"),
                     m.get("app_id"), m.get("session_id"),
                 ),
-            })
+            }
+            if m.get("metadata"): item["metadata"] = m["metadata"]
+            payload.append(item)
         return self._request("POST", "/agent/memory/batch", json={"memories": payload})
 
     # ── Feedback & History ──
@@ -258,12 +260,13 @@ class SharedMemory:
         secret: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Register a persistent HTTP webhook for volume events."""
-        return self._request("POST", "/agent/memory/subscribe", json={
+        body: Dict[str, Any] = {
             "volume_id": volume_id or self.volume_id,
             "url": url,
             "events": events or ["memory.approved", "memory.flagged"],
-            "secret": secret,
-        })
+        }
+        if secret: body["secret"] = secret
+        return self._request("POST", "/agent/memory/subscribe", json=body)
 
     def webhook_unsubscribe(
         self,
@@ -318,17 +321,20 @@ class SharedMemory:
         self,
         *,
         volume_id: Optional[str] = None,
+        query: Optional[str] = None,
         template_id: Optional[str] = None,
         user_id: Optional[str] = None,
         agent_id: Optional[str] = None,
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Assemble a context block for LLM prompting (Zep-style)."""
-        return self._request("POST", "/agent/memory/context/assemble", json={
+        body: Dict[str, Any] = {
             "volume_id": volume_id or self.volume_id,
-            "template_id": template_id,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
-        })
+        }
+        if query: body["query"] = query
+        if template_id: body["template_id"] = template_id
+        return self._request("POST", "/agent/memory/context/assemble", json=body)
 
     # ── Sessions ──
 
@@ -414,6 +420,30 @@ class SharedMemory:
             "volume_id": volume_id or self.volume_id,
             "schema_id": schema_id,
         })
+
+    def create_extraction_schema(
+        self,
+        *,
+        schema_id: str,
+        name: str,
+        json_schema: Dict[str, Any],
+        description: Optional[str] = None,
+        volume_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a new extraction schema."""
+        body: Dict[str, Any] = {
+            "schema_id": schema_id,
+            "name": name,
+            "json_schema": json_schema,
+            "volume_id": volume_id or self.volume_id,
+        }
+        if description: body["description"] = description
+        return self._request("POST", "/agent/memory/extract/schemas", json=body)
+
+    def list_extraction_schemas(self, *, volume_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List extraction schemas for a volume."""
+        vol = volume_id or self.volume_id
+        return self._request("GET", f"/agent/memory/extract/schemas", params={"volume_id": vol})
 
     # ── Agent Profile Management ──
 
