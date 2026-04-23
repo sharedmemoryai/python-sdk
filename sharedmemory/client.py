@@ -97,6 +97,7 @@ class SharedMemory:
         *,
         volume_id: Optional[str] = None,
         memory_type: str = "factual",
+        event_date: Optional[str] = None,
         tags: Optional[List[str]] = None,
         metadata: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None,
@@ -111,6 +112,7 @@ class SharedMemory:
             "memory_type": memory_type,
             **self._entity_scope(user_id, agent_id, app_id, session_id),
         }
+        if event_date: body["event_date"] = event_date
         if metadata: body["metadata"] = metadata
         return self._request("POST", "/agent/memory/write", json=body)
 
@@ -126,6 +128,8 @@ class SharedMemory:
         rerank: bool = False,
         rerank_method: Optional[str] = None,
         include_context: bool = False,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
         template_id: Optional[str] = None,
         user_id: Optional[str] = None,
         agent_id: Optional[str] = None,
@@ -142,6 +146,8 @@ class SharedMemory:
         if rerank: body["rerank"] = rerank
         if rerank_method: body["rerank_method"] = rerank_method
         if include_context: body["include_context"] = include_context
+        if date_from: body["date_from"] = date_from
+        if date_to: body["date_to"] = date_to
         if template_id: body["template_id"] = template_id
         return self._request("POST", "/agent/memory/query", json=body)
 
