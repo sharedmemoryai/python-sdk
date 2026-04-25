@@ -27,6 +27,11 @@ results = memory.search("what are the user's UI preferences?")
 for source in results["sources"]:
     print(source["content"], source["score"])
 
+# Chat (RAG + LLM answer)
+result = memory.chat("What does the user prefer for their UI?")
+print(result["answer"])
+print(result["sources"])
+
 # Batch add
 memory.add_many([
     {"content": "User's name is Alice"},
@@ -142,6 +147,7 @@ async with AsyncSharedMemory(api_key="sm_live_...") as memory:
 |--------|-------------|
 | `add(content)` | Add a memory (alias: `remember`) |
 | `search(query)` | Semantic search (alias: `recall`) |
+| `chat(query)` | Ask a question — LLM answers using your memories |
 | `get(memory_id)` | Get single memory |
 | `update(memory_id, content)` | Update memory |
 | `delete(memory_id)` | Soft-delete |

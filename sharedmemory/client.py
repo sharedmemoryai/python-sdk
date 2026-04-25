@@ -153,6 +153,35 @@ class SharedMemory:
 
     recall = search  # alias
 
+    def chat(
+        self,
+        query: str,
+        *,
+        volume_id: Optional[str] = None,
+        limit: int = 10,
+        date_from: Optional[str] = None,
+        date_to: Optional[str] = None,
+        rerank: bool = False,
+        user_id: Optional[str] = None,
+        agent_id: Optional[str] = None,
+        session_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Ask a question and get an LLM-generated answer grounded in your memories.
+
+        Uses the full RAG pipeline: retrieval → reranking → LLM generation → citations.
+        Returns {answer, sources, citations}.
+        """
+        body: Dict[str, Any] = {
+            "query": query,
+            "volume_id": volume_id or self.volume_id,
+            "limit": limit,
+            **self._entity_scope(user_id, agent_id, session_id=session_id),
+        }
+        if date_from: body["date_from"] = date_from
+        if date_to: body["date_to"] = date_to
+        if rerank: body["rerank"] = rerank
+        return self._request("POST", "/agent/memory/chat", json=body)
+
     def get(self, memory_id: str, *, volume_id: Optional[str] = None) -> Dict[str, Any]:
         """Get a single memory by ID."""
         vol = volume_id or self.volume_id
