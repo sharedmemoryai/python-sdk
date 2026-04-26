@@ -90,14 +90,14 @@ class AsyncSharedMemory:
 
     # ── Core Memory Operations ──
 
-    async def add(
+    async def remember(
         self, content: str, *, volume_id: Optional[str] = None,
         memory_type: str = "factual", event_date: Optional[str] = None,
         tags: Optional[List[str]] = None, metadata: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None, agent_id: Optional[str] = None,
         app_id: Optional[str] = None, session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Add a memory. Returns processing result with status, confidence, memory_id."""
+        """Store a memory. Returns processing result with status, confidence, memory_id."""
         body: Dict[str, Any] = {
             "content": content,
             "volume_id": volume_id or self.volume_id,
@@ -108,19 +108,19 @@ class AsyncSharedMemory:
         if metadata: body["metadata"] = metadata
         return await self._request("POST", "/agent/memory/write", json=body)
 
-    remember = add
+    add = remember  # deprecated alias
 
-    async def search(
-        self, query: str, *, volume_id: Optional[str] = None, limit: int = 10,
+    async def query(
+        self, query_text: str, *, volume_id: Optional[str] = None, limit: int = 10,
         filters: Optional[Dict[str, Any]] = None, rerank: bool = False,
         rerank_method: Optional[str] = None, include_context: bool = False,
         date_from: Optional[str] = None, date_to: Optional[str] = None,
         template_id: Optional[str] = None, user_id: Optional[str] = None,
         agent_id: Optional[str] = None, session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Search memories by semantic similarity with optional reranking and context assembly."""
+        """Query memories by semantic similarity with optional reranking and context assembly."""
         body: Dict[str, Any] = {
-            "query": query,
+            "query": query_text,
             "volume_id": volume_id or self.volume_id,
             "limit": limit,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
@@ -134,7 +134,8 @@ class AsyncSharedMemory:
         if template_id: body["template_id"] = template_id
         return await self._request("POST", "/agent/memory/query", json=body)
 
-    recall = search
+    search = query  # deprecated alias
+    recall = query  # deprecated alias
 
     async def chat(
         self, query: str, *, volume_id: Optional[str] = None, limit: int = 10,
@@ -194,7 +195,7 @@ class AsyncSharedMemory:
                         for u in updates],
         })
 
-    async def add_many(self, memories: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def remember_many(self, memories: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Batch write up to 100 memories in a single request.
 
         Each item should have 'content' and optionally 'volume_id', 'memory_type',
@@ -214,6 +215,8 @@ class AsyncSharedMemory:
             if m.get("metadata"): item["metadata"] = m["metadata"]
             payload.append(item)
         return await self._request("POST", "/agent/memory/batch", json={"memories": payload})
+
+    add_many = remember_many  # deprecated alias
 
     # ── Feedback & History ──
 
@@ -278,13 +281,13 @@ class AsyncSharedMemory:
 
     # ── Context Assembly ──
 
-    async def assemble_context(self, *, volume_id: Optional[str] = None,
+    async def get_context(self, *, volume_id: Optional[str] = None,
                                query: Optional[str] = None,
                                template_id: Optional[str] = None,
                                user_id: Optional[str] = None,
                                agent_id: Optional[str] = None,
                                session_id: Optional[str] = None) -> Dict[str, Any]:
-        """Assemble a context block for LLM prompting (Zep-style)."""
+        """Get a context block for LLM prompting."""
         body: Dict[str, Any] = {
             "volume_id": volume_id or self.volume_id,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
@@ -292,6 +295,8 @@ class AsyncSharedMemory:
         if query: body["query"] = query
         if template_id: body["template_id"] = template_id
         return await self._request("POST", "/agent/memory/context/assemble", json=body)
+
+    assemble_context = get_context  # deprecated alias
 
     # ── Instructions ──
 

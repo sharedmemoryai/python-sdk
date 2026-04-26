@@ -91,7 +91,7 @@ class SharedMemory:
 
     # ── Core Memory Operations ──
 
-    def add(
+    def remember(
         self,
         content: str,
         *,
@@ -105,7 +105,7 @@ class SharedMemory:
         app_id: Optional[str] = None,
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Add a memory. Returns processing result with status, confidence, memory_id."""
+        """Store a memory. Returns processing result with status, confidence, memory_id."""
         body: Dict[str, Any] = {
             "content": content,
             "volume_id": volume_id or self.volume_id,
@@ -116,11 +116,11 @@ class SharedMemory:
         if metadata: body["metadata"] = metadata
         return self._request("POST", "/agent/memory/write", json=body)
 
-    remember = add  # alias
+    add = remember  # deprecated alias
 
-    def search(
+    def query(
         self,
-        query: str,
+        query_text: str,
         *,
         volume_id: Optional[str] = None,
         limit: int = 10,
@@ -135,9 +135,9 @@ class SharedMemory:
         agent_id: Optional[str] = None,
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Search memories by semantic similarity with optional reranking and context assembly."""
+        """Query memories by semantic similarity with optional reranking and context assembly."""
         body: Dict[str, Any] = {
-            "query": query,
+            "query": query_text,
             "volume_id": volume_id or self.volume_id,
             "limit": limit,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
@@ -151,7 +151,8 @@ class SharedMemory:
         if template_id: body["template_id"] = template_id
         return self._request("POST", "/agent/memory/query", json=body)
 
-    recall = search  # alias
+    search = query  # deprecated alias
+    recall = query  # deprecated alias
 
     def chat(
         self,
@@ -237,7 +238,7 @@ class SharedMemory:
                         for u in updates],
         })
 
-    def add_many(
+    def remember_many(
         self,
         memories: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
@@ -260,6 +261,8 @@ class SharedMemory:
             if m.get("metadata"): item["metadata"] = m["metadata"]
             payload.append(item)
         return self._request("POST", "/agent/memory/batch", json={"memories": payload})
+
+    add_many = remember_many  # deprecated alias
 
     # ── Feedback & History ──
 
@@ -352,7 +355,7 @@ class SharedMemory:
 
     # ── Context Assembly ──
 
-    def assemble_context(
+    def get_context(
         self,
         *,
         volume_id: Optional[str] = None,
@@ -362,7 +365,7 @@ class SharedMemory:
         agent_id: Optional[str] = None,
         session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Assemble a context block for LLM prompting (Zep-style)."""
+        """Get a context block for LLM prompting."""
         body: Dict[str, Any] = {
             "volume_id": volume_id or self.volume_id,
             **self._entity_scope(user_id, agent_id, session_id=session_id),
@@ -370,6 +373,8 @@ class SharedMemory:
         if query: body["query"] = query
         if template_id: body["template_id"] = template_id
         return self._request("POST", "/agent/memory/context/assemble", json=body)
+
+    assemble_context = get_context  # deprecated alias
 
     # ── Instructions ──
 

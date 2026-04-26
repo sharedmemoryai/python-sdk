@@ -18,22 +18,22 @@ memory = SharedMemory(
     volume_id="your-volume-uuid",
 )
 
-# Add a memory
-result = memory.add("User prefers dark mode and compact layout")
+# Store a memory
+result = memory.remember("User prefers dark mode and compact layout")
 print(result["status"])  # "approved"
 
-# Search memories
-results = memory.search("what are the user's UI preferences?")
+# Query memories
+results = memory.query("what are the user's UI preferences?")
 for source in results["sources"]:
     print(source["content"], source["score"])
 
-# Chat (RAG + LLM answer)
+# Chat (RAG + LLM answer) — the default way to interact
 result = memory.chat("What does the user prefer for their UI?")
 print(result["answer"])
 print(result["sources"])
 
-# Batch add
-memory.add_many([
+# Batch write
+memory.remember_many([
     {"content": "User's name is Alice"},
     {"content": "Alice works at Acme Corp"},
     {"content": "Alice prefers Python over JavaScript"},
@@ -53,8 +53,8 @@ memory = SharedMemory(
 )
 
 # All operations are automatically scoped
-memory.add("User asked about pricing", session_id="sess-abc")
-results = memory.search("pricing", session_id="sess-abc")
+memory.remember("User asked about pricing", session_id="sess-abc")
+results = memory.query("pricing", session_id="sess-abc")
 ```
 
 ## Sessions
@@ -66,8 +66,8 @@ Track conversation sessions with automatic summarization:
 memory.start_session("conv-001", user_id="user-123")
 
 # Add memories during the session
-memory.add("User asked about pricing", session_id="conv-001")
-memory.add("User is interested in enterprise plan", session_id="conv-001")
+memory.remember("User asked about pricing", session_id="conv-001")
+memory.remember("User is interested in enterprise plan", session_id="conv-001")
 
 # End session — automatically summarizes into long-term memory
 summary = memory.end_session("conv-001", auto_summarize=True)
@@ -77,7 +77,7 @@ summary = memory.end_session("conv-001", auto_summarize=True)
 
 ```python
 # With reranking
-results = memory.search(
+results = memory.query(
     "project deadlines",
     rerank=True,
     rerank_method="llm",
@@ -85,7 +85,7 @@ results = memory.search(
 )
 
 # With metadata filters
-results = memory.search("preferences", filters={
+results = memory.query("preferences", filters={
     "AND": [
         {"field": "memory_class", "op": "eq", "value": "preference"},
         {"field": "score", "op": "gte", "value": 0.5},
@@ -117,7 +117,7 @@ memory.feedback("memory-uuid", "NEGATIVE", reason="Outdated information")
 Get an optimized context block for LLM prompting:
 
 ```python
-context = memory.assemble_context(template_id="conversational")
+context = memory.get_context(template_id="conversational")
 print(context["blocks"])  # Ready for system prompt injection
 ```
 
@@ -137,21 +137,21 @@ print(data)  # {"name": "Alice", "age": 28, "company": "Acme Corp", ...}
 from sharedmemory.async_client import AsyncSharedMemory
 
 async with AsyncSharedMemory(api_key="sm_live_...") as memory:
-    await memory.add("async memory")
-    results = await memory.search("query")
+    await memory.remember("async memory")
+    results = await memory.query("query")
 ```
 
 ## API Reference
 
 | Method | Description |
 |--------|-------------|
-| `add(content)` | Add a memory (alias: `remember`) |
-| `search(query)` | Semantic search (alias: `recall`) |
+| `remember(content)` | Store a memory |
+| `query(query)` | Query memories (semantic search) |
 | `chat(query)` | Ask a question — LLM answers using your memories |
 | `get(memory_id)` | Get single memory |
 | `update(memory_id, content)` | Update memory |
 | `delete(memory_id)` | Soft-delete |
-| `add_many(memories)` | Batch write (up to 100) |
+| `remember_many(memories)` | Batch write (up to 100) |
 | `delete_many(memory_ids)` | Batch delete |
 | `update_many(updates)` | Batch update |
 | `feedback(memory_id, feedback)` | Quality feedback |
@@ -160,7 +160,7 @@ async with AsyncSharedMemory(api_key="sm_live_...") as memory:
 | `search_entities(query)` | Search entities by name |
 | `get_graph()` | Full knowledge graph |
 | `list_volumes()` | List accessible volumes |
-| `assemble_context()` | LLM context block |
+| `get_context()` | LLM context block |
 | `start_session(id)` | Start session |
 | `end_session(id)` | End + summarize session |
 | `get_session(id)` | Get session details |
