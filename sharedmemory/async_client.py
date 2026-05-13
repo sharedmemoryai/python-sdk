@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import platform
+import sys
 from typing import Any, Dict, List, Optional
 
 import httpx
 
-from .client import SharedMemoryError
+from .client import SharedMemoryError, SDK_VERSION
 
 
 class AsyncSharedMemory:
@@ -32,6 +34,9 @@ class AsyncSharedMemory:
         agent_id: Optional[str] = None,
         app_id: Optional[str] = None,
         session_id: Optional[str] = None,
+        client_name: str = "sdk-python",
+        client_version: str = SDK_VERSION,
+        client_host: Optional[str] = None,
     ):
         if not api_key:
             raise ValueError("api_key is required")
@@ -45,11 +50,27 @@ class AsyncSharedMemory:
         self.agent_id = agent_id
         self.app_id = app_id
         self.session_id = session_id
+        self.client_name = client_name
+        self.client_version = client_version
+        self.client_host = client_host
+
+        identity_headers: Dict[str, str] = {
+            "User-Agent": (
+                f"sharedmemory-{client_name}/{client_version} "
+                f"(python {sys.version_info.major}.{sys.version_info.minor}; {platform.system().lower()})"
+            ),
+            "X-SM-Client": client_name,
+            "X-SM-Client-Version": client_version,
+        }
+        if client_host:
+            identity_headers["X-SM-Client-Host"] = client_host
+
         self._client = httpx.AsyncClient(
             base_url=self.base_url,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
+                **identity_headers,
             },
             timeout=timeout,
         )
